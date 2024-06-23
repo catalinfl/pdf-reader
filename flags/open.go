@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"regexp"
 	"sync"
 )
 
@@ -21,25 +21,24 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 		fmt.Println("Error reading the file")
 	}
 
-	var batchStr strings.Builder
-	batchStr.WriteString("@echo off \n")
-
-	color := "00"
-
-	if args.Colour != "" {
-		color = fmt.Sprintf("color %s%s \n", getColorMap()[args.Colour], "1")
-		batchStr.WriteString(color)
-	}
-
 	strData := string(data)
-	strData = batchStr.String() + strData
 
-	fmt.Println(strData)
+	colorsMap := getColorMap() // get colors from map
+	newColorCmd := fmt.Sprintf("color %s%s", colorsMap[args.Background], colorsMap[args.Colour])
+
+	colorCmdRegex := regexp.MustCompile(`color \w\w`)
+
+	if colorCmdRegex.MatchString(strData) {
+		strData = colorCmdRegex.ReplaceAllString(strData, newColorCmd)
+	} else {
+		strData = "@echo off \n" + newColorCmd + strData
+	}
 
 	err = os.WriteFile(batchFileName, []byte(strData), 0777)
 
 	if err != nil {
 		fmt.Println("Error writing the file")
+		return
 	}
 
 	// Start a new CMD process to run the batch file

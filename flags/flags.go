@@ -10,9 +10,10 @@ import (
 )
 
 type Arguments struct {
-	Colour   string
-	ReadPath string
-	Help     bool
+	Colour     string
+	ReadPath   string
+	Background string
+	Help       bool
 }
 
 var args Arguments
@@ -21,6 +22,7 @@ func ArgumentsFunc() {
 
 	flag.StringVar(&args.Colour, "colour", "white", "colour of cli text")
 	flag.StringVar(&args.ReadPath, "read", "", "read the path")
+	flag.StringVar(&args.Background, "background", "black", "background of cli")
 	flag.BoolVar(&args.Help, "help", false, "help")
 
 	flag.Usage = func() {
@@ -82,6 +84,8 @@ func CheckArguments(args Arguments) (string, string) {
 			} else {
 				info.WriteString(fmt.Sprintf("Read path is %s. \n", args.ReadPath))
 			}
+		case "Background":
+			info.WriteString(fmt.Sprintf("Background set as %s", args.Background))
 		}
 	}
 
