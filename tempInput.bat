@@ -1,8 +1,9 @@
 @echo off 
-color 27 
+color 07 
 title pdfreader
 
 :: START ECHO COMMANDS
+:Page1
 echo ULTRAS BRAILA  
 echo Word document  
 echo Stadin alone all alone again  
@@ -23,6 +24,8 @@ echo teawtaw
 echo fdfs  
 echo fsf  
 echo dsf  
+goto :end
+:Page2
 echo warawrawr  
 echo gfdgdfgd  
 echo gsafas 
@@ -30,15 +33,6 @@ echo pam pam
 echo papmmpmpmpmp 
 echo BAMBLONAA4 
 :: END ECHO COMMANDS
-
-
-
-
-
-
-
-
-
 @REM set /p UserInput=
 @REM if "%UserInput%"=="exit" goto :end
 :loop

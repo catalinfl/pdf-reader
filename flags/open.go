@@ -1,6 +1,7 @@
 package flags
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,8 +11,6 @@ import (
 
 	"github.com/catalinfl/pdfreader/process"
 )
-
-// de adaugat background color
 
 func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -27,34 +26,19 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 
 	strData := string(data)
 
-	startMarker := ":: START ECHO COMMANDS"
-	endMarker := ":: END ECHO COMMANDS"
-
 	// Extract text from PDF
 	text, err := process.ExtractTextFromPDF(args.ReadPath)
-
 	if err != nil {
 		fmt.Println("Error extracting text from PDF:", err)
 		return
 	}
 
 	lines := strings.Split(text, "\n")
+	totalLines := len(lines)
+	linesPerPage := 25
+	totalPages := (totalLines + linesPerPage - 1) / linesPerPage // Ceiling division
 
-	sectionRegex := regexp.MustCompile(`(?s)` + regexp.QuoteMeta(startMarker) + `.*` + regexp.QuoteMeta(endMarker))
-
-	newEchoCmds := startMarker + "\n"
-
-	for i := 0; i < len(lines); i++ {
-		if lines[i] == "" {
-			newEchoCmds += "echo. \n" // Echo a blank line if line is empty
-		} else {
-			newEchoCmds += fmt.Sprintf("echo %s \n", lines[i])
-		}
-	}
-
-	newEchoCmds += endMarker
-
-	strData = sectionRegex.ReplaceAllString(strData, newEchoCmds)
+	// Modify the batch file content here if needed, but remove pagination logic
 
 	colorsMap := getColorMap()
 	newColorCmd := fmt.Sprintf("color %s%s", colorsMap[args.Background], colorsMap[args.Colour])
@@ -70,9 +54,57 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 	}
 
 	// Start a new CMD process to run the batch file
-	cmd := exec.Command("cmd", "/C", "start", batchFileName)
+	cmd := exec.Command("cmd", "/C", batchFileName)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("Error executing the batch file:", err)
+		return
 	}
+
+	// Handle pagination in Go
+	reader := bufio.NewReader(os.Stdin)
+	currentPage := 1
+
+	for {
+
+		clearScreen()
+
+		startLine := (currentPage - 1) * linesPerPage
+		endLine := startLine + linesPerPage
+		if endLine > totalLines {
+			endLine = totalLines
+		}
+		for _, line := range lines[startLine:endLine] {
+			fmt.Println(line)
+		}
+
+		// for i := 0; i < 3; i++ {
+		// 	fmt.Println()
+		// }
+
+		for i := 0; i < linesPerPage-(endLine-startLine)+2; i++ {
+			fmt.Println()
+		}
+
+		fmt.Printf("\n<< < Page %d/%d > >> q to quit\n", currentPage, totalPages)
+		// fmt.Println("Press 'n' for next page, 'p' for previous page, or 'q' to quit.")
+		input, _ := reader.ReadString('\n')
+		input = strings.TrimSpace(input)
+
+		if input == ">" && currentPage < totalPages {
+			currentPage++
+		} else if input == "<" && currentPage > 1 {
+			currentPage--
+		} else if input == "q" {
+			break
+		}
+	}
+}
+
+func clearScreen() {
+	cmd := exec.Command("cmd", "/c", "cls")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 }
