@@ -64,6 +64,13 @@ func CheckArguments(args Arguments) (string, string) {
 		value := val.Field(i).Interface()
 
 		switch field.Name {
+		case "ReadPath":
+			if value == "" {
+				err.WriteString("You need to set the read path! \nUse --read [path] to set the path \n")
+				args = Arguments{Colour: "", ReadPath: "", Background: "", Help: false}
+			} else {
+				info.WriteString(fmt.Sprintf("Read path is %s. \n", args.ReadPath))
+			}
 		case "Help":
 			if value == true {
 				info.Reset()
@@ -71,21 +78,14 @@ func CheckArguments(args Arguments) (string, string) {
 				err.Reset()
 				return info.String(), err.String()
 			}
-
 		case "Colour":
 			if value == "" {
 				err.WriteString("Colour is not set \n")
 			} else {
 				info.WriteString(fmt.Sprintf("Colour is set as %s. \n", args.Colour))
 			}
-		case "ReadPath":
-			if value == "" {
-				err.WriteString("You need to set the read path! \nUse --read [path] to set the path \n")
-			} else {
-				info.WriteString(fmt.Sprintf("Read path is %s. \n", args.ReadPath))
-			}
 		case "Background":
-			info.WriteString(fmt.Sprintf("Background set as %s", args.Background))
+			info.WriteString(fmt.Sprintf("Background set as %s \n", args.Background))
 		}
 	}
 
