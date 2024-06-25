@@ -74,7 +74,7 @@ func CheckArguments(args Arguments) (string, string) {
 		case "Help":
 			if value == true {
 				info.Reset()
-				info.WriteString("--colour [colour] - Set the colour of CLI\n--read [path] - Read the path of .pdf \n")
+				info.WriteString("\n--colour [colour] - Set the colour of CLI\n--read [path] - Read the path of .pdf \n--background [colour] - Set background colour \n\nType > - go to next page\nType < - go to previous page\nType q - quit\nType goto [page number] - go to specific page number\n")
 				err.Reset()
 				return info.String(), err.String()
 			}

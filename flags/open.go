@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -26,34 +27,33 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 
 	strData := string(data)
 
-	// Extract text from PDF
+	// extract pdf
 	text, err := process.ExtractTextFromPDF(args.ReadPath)
 	if err != nil {
 		fmt.Println("Error extracting text from PDF:", err)
 		return
 	}
 
-	lines := strings.Split(text, "\n")
-	totalLines := len(lines)
-	linesPerPage := 25
-	totalPages := (totalLines + linesPerPage - 1) / linesPerPage // Ceiling division
-
-	// Modify the batch file content here if needed, but remove pagination logic
-
+	// verify if color exists in batch, if exists it modifies, if not it adds it
 	colorsMap := getColorMap()
 	newColorCmd := fmt.Sprintf("color %s%s", colorsMap[args.Background], colorsMap[args.Colour])
-
 	colorCmdRegex := regexp.MustCompile(`color \w\w`)
 	strData = colorCmdRegex.ReplaceAllString(strData, newColorCmd)
 
-	// Write the modified content back to the batch file with more restrictive permissions
+	// displaying lines logic
+	lines := strings.Split(text, "\n")
+	totalLines := len(lines)
+	linesPerPage := 27
+	totalPages := (totalLines + linesPerPage - 1) / linesPerPage // Ceiling division
+
+	// write text in a batch file
 	err = os.WriteFile(batchFileName, []byte(strData), 0666)
 	if err != nil {
 		fmt.Println("Error writing the file:", err)
 		return
 	}
 
-	// Start a new CMD process to run the batch file
+	// start a new cmd process
 	cmd := exec.Command("cmd", "/C", batchFileName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -63,12 +63,12 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 		return
 	}
 
-	// Handle pagination in Go
+	// add reader
 	reader := bufio.NewReader(os.Stdin)
 	currentPage := 1
 
 	for {
-
+		// for starts for every page
 		clearScreen()
 
 		startLine := (currentPage - 1) * linesPerPage
@@ -76,20 +76,17 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 		if endLine > totalLines {
 			endLine = totalLines
 		}
+
 		for _, line := range lines[startLine:endLine] {
 			fmt.Println(line)
 		}
 
-		// for i := 0; i < 3; i++ {
-		// 	fmt.Println()
-		// }
-
-		for i := 0; i < linesPerPage-(endLine-startLine)+2; i++ {
+		for i := 0; i < linesPerPage-(endLine-startLine); i++ {
 			fmt.Println()
 		}
 
-		fmt.Printf("\n<< < Page %d/%d > >> q to quit\n", currentPage, totalPages)
-		// fmt.Println("Press 'n' for next page, 'p' for previous page, or 'q' to quit.")
+		fmt.Printf("\n<< < Page %d/%d > >> q - quit, goto [page]\n", currentPage, totalPages)
+
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 
@@ -99,6 +96,21 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 			currentPage--
 		} else if input == "q" {
 			break
+		} else if strings.Contains(input, "goto") {
+			// get page number
+			pageNumber := strings.Split(input, " ")[1]
+			intPageNumber, _ := strconv.Atoi(pageNumber)
+			if intPageNumber < 0 {
+				currentPage = 0
+			}
+
+			if intPageNumber > totalPages {
+				currentPage = totalPages
+			}
+
+			if intPageNumber > 0 && intPageNumber <= totalPages {
+				currentPage = intPageNumber
+			}
 		}
 	}
 }

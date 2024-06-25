@@ -1,5 +1,7 @@
 package flags
 
+// colors of cmd
+
 type ColorCMD = map[string]string
 
 func getColorMap() ColorCMD {
