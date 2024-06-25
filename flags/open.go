@@ -18,14 +18,32 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 
 	batchFileName := "tempInput.bat"
 
+	// Create a new batch file
+
+	batchText := `@echo off 
+	cls
+	color 07`
+
+	_, err := os.Stat(batchFileName)
+
 	// Read the existing content of the batch file
-	data, err := os.ReadFile(batchFileName)
-	if err != nil {
-		fmt.Println("Error reading the file:", err)
+	if os.IsNotExist(err) {
+		fmt.Println("File does not exist. Creating it...")
+		// File does not exist, create it with the batchText content
+		err = os.WriteFile(batchFileName, []byte(batchText), 0666)
+		if err != nil {
+			fmt.Println("Error writing the file:", err)
+			return
+		}
+		fmt.Println("File created successfully.")
+	} else if err != nil {
+		fmt.Println("Error checking the file:", err)
 		return
+	} else {
+		fmt.Println("File already exists.")
 	}
 
-	strData := string(data)
+	strData := batchText
 
 	// extract pdf
 	text, err := process.ExtractTextFromPDF(args.ReadPath)
@@ -95,6 +113,7 @@ func OpenCMD(args Arguments, wg *sync.WaitGroup) {
 		} else if input == "<" && currentPage > 1 {
 			currentPage--
 		} else if input == "q" {
+			os.Remove(batchFileName)
 			break
 		} else if strings.Contains(input, "goto") {
 			// get page number
