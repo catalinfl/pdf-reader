@@ -1,6 +1,6 @@
 # PDF Reader
 
-PDF Reader useful if you need to read something in cmd if you are tired of reading white-black :weary:
+PDF Reader - useful if you need to read something in cmd if you are tired of reading white-black :weary:
 
 
 ## Usage
