@@ -1,6 +1,6 @@
-== PDF Reader
+# PDF Reader
 
-= Usage
+## Usage
 go build 
 cmd 
 pdfreader --read <file.pdf> --colour red --background white
